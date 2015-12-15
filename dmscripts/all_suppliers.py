@@ -6,6 +6,8 @@ if sys.version_info > (3, 0):
 else:
     import unicodecsv as csv
 
+from dmutils.apiclient import HTTPError
+
 
 def find_suppliers(data_api_client):
     for supplier in data_api_client.find_suppliers_iter():
@@ -33,8 +35,17 @@ def list_suppliers(data_api_client, output):
     for supplier in suppliers:
         count = progress(count, start_time)
 
-        row = [
-            supplier['id'],
-            supplier['name']
-        ]
-        writer.writerow(row)
+        try:
+            # don't actually need the response -- if it's not a 404, they're on G5
+            # TODO: this is hugely inefficient. Use thread pooling if we're going to run this again
+            data_api_client.get_supplier_framework_info(supplier['id'], 'g-cloud-5')
+
+            row = [
+                supplier['id'],
+                supplier['name'],
+                supplier.get('dunsNumber', '')
+            ]
+            writer.writerow(row)
+
+        except HTTPError:
+            pass
