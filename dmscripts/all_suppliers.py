@@ -23,29 +23,44 @@ def progress(count, start_time):
 def list_suppliers(data_api_client, output):
     start_time = time.time()
     count = 0
+    suppliers_without_services = 0
     writer = csv.writer(
         output,
         delimiter=',',
         quotechar='"'
-        # fieldnames=['Supplier ID', 'Supplier Name']
     )
-    # writer.writeheader()
+
     suppliers = find_suppliers(data_api_client)
 
     for supplier in suppliers:
         count = progress(count, start_time)
 
         try:
-            # don't actually need the response -- if it's not a 404, they're on G5
             # TODO: this is hugely inefficient. Use thread pooling if we're going to run this again
-            data_api_client.get_supplier_framework_info(supplier['id'], 'g-cloud-5')
+            services = data_api_client.find_services(supplier['id'])
 
-            row = [
-                supplier['id'],
-                supplier['name'],
-                supplier.get('dunsNumber', '')
-            ]
-            writer.writerow(row)
+            if services['services']:
+                for service in services['services']:
+
+                    row = [
+                        supplier['id'],
+                        supplier['name'],
+                        supplier.get('dunsNumber', ''),
+                        '@{}'.format(supplier['contactInformation'][0].get('email').split('@', 1)[1]),
+                        supplier['contactInformation'][0].get('postcode'),
+                        supplier['contactInformation'][0].get('country'),
+                        service['id'],
+                        service['serviceName'],
+                        service['lot'],
+                        service['frameworkSlug']
+                    ]
+                    writer.writerow(row)
+
+            else:
+                suppliers_without_services += 1
 
         except HTTPError:
+            print('Error getting services for supplier {}'.format(supplier['id']))
             pass
+
+    print('Suppliers without services: {}'.format(suppliers_without_services))
