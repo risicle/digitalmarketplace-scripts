@@ -32,7 +32,7 @@ def upload_agreement(bucket, dry_run, file_path):
     upload_path = get_countersigned_agreement_document_path("g-cloud-7", supplier_id)
     if not dry_run:
         with open(file_path) as file_contents:
-            bucket.save(upload_path, file_contents, acl='public-read', move_prefix=None)
+            bucket.save(upload_path, file_contents, acl='private', move_prefix=None)
         print(supplier_id)
     else:
         print("[Dry-run] UPLOAD: '{}' to '{}'".format(file_path, upload_path))
