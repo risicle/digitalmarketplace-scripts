@@ -49,7 +49,7 @@ def list_suppliers(data_api_client, output):
                         '@{}'.format(supplier['contactInformation'][0].get('email').split('@', 1)[1]),
                         supplier['contactInformation'][0].get('postcode'),
                         supplier['contactInformation'][0].get('country'),
-                        '"{}"'.format(service['id']),
+                        '\"{}\"'.format(service['id']),
                         service['serviceName'],
                         service['lot'],
                         service['frameworkSlug']
