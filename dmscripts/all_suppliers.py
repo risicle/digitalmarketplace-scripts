@@ -15,9 +15,14 @@ def find_suppliers(data_api_client):
         yield supplier
 
 
+def find_services(data_api_client):
+    for service in data_api_client.find_services_iter():
+        yield service
+
+
 def progress(count, start_time):
     if count % 100 == 0:
-        print("{} suppliers in {}s".format(count, time.time() - start_time))
+        print("{} services in {}s".format(count, time.time() - start_time))
     return count + 1
 
 
@@ -31,22 +36,23 @@ def list_suppliers(data_api_client, output):
         quotechar='"'
     )
 
-    suppliers = find_suppliers(data_api_client)
+    services = find_services(data_api_client)
 
-    for supplier in suppliers:
+    for service in services:
+
         count = progress(count, start_time)
 
-        supplier_framework = None
-        try:
-            supplier_framework = data_api_client.get_supplier_framework_info(
-                supplier['id'], 'digital-outcomes-and-specialists')['frameworkInterest']
-        except HTTPError:
-            pass
+        if service['frameworkSlug'] in ['g-cloud-6', 'g-cloud-7']:
 
-        if supplier_framework and supplier_framework['onFramework']:
             row = [
-             supplier['id'],
-             supplier['contactInformation'][0].get('postcode') or '(NA)'
+                service['id'],
+                service['serviceName'],
+                service['supplierId'],
+                service['supplierName'],
+                service['frameworkName'],
+                service['serviceSummary'].replace('\n', ' ').replace('\r', ''),
+                ', '.join(service['serviceBenefits']) if service['serviceBenefits'] else '',
+                ', '.join(service['serviceFeatures']) if service['serviceFeatures'] else ''
             ]
             writer.writerow(row)
 
